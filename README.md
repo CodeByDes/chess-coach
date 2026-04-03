@@ -23,7 +23,11 @@ Built with vanilla JavaScript — no frameworks, no build tools, no dependencies
 
 ## 📸 Screenshots
 
-[<img src="https://i.imgur.com/sxZMQJk.png" width="600">](https://i.imgur.com/sxZMQJk.png)
+| Desktop | Mobile |
+|------------|-------------|
+| [<img src="https://i.imgur.com/sxZMQJk.png" width="600">](https://i.imgur.com/sxZMQJk.png) | <em>Mobile screenshot coming soon |
+
+
 
 
 
