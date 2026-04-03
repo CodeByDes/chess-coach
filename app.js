@@ -157,7 +157,13 @@ class ChessApp {
    * Ignores clicks during the AI's turn.
    */
   handleSquareClick(row, col) {
-    if (!this.gameActive) return;
+    if (!this.gameActive) {
+      const clickedPiece = this.board.getPiece(row, col);
+      if (clickedPiece) {
+        this.ui.showMessage('No game is active yet. Click "New Game" to start playing.', 'warning', true);
+      }
+      return;
+    }
     if (this.board.currentTurn === this.aiColor || this.ai.getIsThinking()) return;
 
     const clickedPiece = this.board.getPiece(row, col);
