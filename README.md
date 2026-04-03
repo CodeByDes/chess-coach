@@ -25,7 +25,9 @@ Built with vanilla JavaScript — no frameworks, no build tools, no dependencies
 
 | Desktop | Mobile |
 |------------|-------------|
-| [<img src="https://i.imgur.com/sxZMQJk.png" width="600">](https://i.imgur.com/sxZMQJk.png) | <em>Mobile screenshot coming soon |
+| [<img src="https://i.imgur.com/sxZMQJk.png" width="500">](https://i.imgur.com/sxZMQJk.png) | [<img src="https://i.imgur.com/7t6xKqK.jpeg" height="400" >](https://i.imgur.com/7t6xKqK.jpeg) |
+
+
 
 
 
