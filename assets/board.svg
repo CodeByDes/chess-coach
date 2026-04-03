@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480">
+  <defs>
+    <pattern id="boardPattern" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="60" height="60" fill="#f0d9b5"/>
+      <rect x="60" y="0" width="60" height="60" fill="#b58863"/>
+      <rect x="0" y="60" width="60" height="60" fill="#b58863"/>
+      <rect x="60" y="60" width="60" height="60" fill="#f0d9b5"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="480" height="480" fill="url(#boardPattern)"/>
+  <rect x="0" y="0" width="480" height="480" fill="none" stroke="#5c4033" stroke-width="4"/>
+</svg>
