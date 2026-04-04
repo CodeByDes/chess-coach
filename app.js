@@ -205,6 +205,7 @@ class ChessApp {
   }
 
   handleSquareClick(row, col) {
+<<<<<<< HEAD
     if (this.isPuzzleMode()) {
       this.handlePuzzleSquareClick(row, col);
       return;
@@ -218,6 +219,16 @@ class ChessApp {
       return;
     }
     if (this.board.currentTurn === this.aiColor || this.ai.getIsThinking()) {return;}
+=======
+    if (!this.gameActive) {
+      const clickedPiece = this.board.getPiece(row, col);
+      if (clickedPiece) {
+        this.ui.showMessage('No game is active yet. Click "New Game" to start playing.', 'warning', true);
+      }
+      return;
+    }
+    if (this.board.currentTurn === this.aiColor || this.ai.getIsThinking()) return;
+>>>>>>> 7aaa216d0d6291fc3638f54184ef047ae273ebea
 
     const clickedPiece = this.board.getPiece(row, col);
     const isOwnPiece = clickedPiece && this.board.isOwnPiece(clickedPiece);
