@@ -6,6 +6,7 @@ desktop.ini
 # Editor directories and files
 .vscode/
 .idea/
+.qwen/
 *.swp
 *.swo
 *~
@@ -29,6 +30,12 @@ pids
 node_modules/
 jspm_packages/
 
+# Test & lint tooling
+playwright-report/
+test-results/
+.nyc_output/
+eslintcache
+
 # Build output
 dist/
 build/
@@ -40,7 +47,6 @@ out/
 .env.*.local
 
 # Package manager locks (keep if needed for deployment)
-# package-lock.json
 # yarn.lock
 
 # Temporary files

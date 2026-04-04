@@ -12,6 +12,16 @@
   <!-- Menu Bar -->
   <nav class="menu-bar">
     <div class="menu-item">
+      <button class="menu-btn">Modes ▾</button>
+      <div class="menu-dropdown">
+        <button id="standardModeBtn">♔ Standard Game</button>
+        <button id="puzzlesModeBtn">🧩 Puzzle Hub</button>
+        <button id="dailyPuzzleBtn">☀️ Daily Puzzle</button>
+        <button id="puzzleRushBtn">⚡ Puzzle Rush</button>
+        <button id="puzzleDuelBtn">⚔️ Puzzle Duel</button>
+      </div>
+    </div>
+    <div class="menu-item">
       <button class="menu-btn">Settings ▾</button>
       <div class="menu-dropdown">
         <label class="menu-toggle">
@@ -19,12 +29,32 @@
           <input type="checkbox" id="coachToggle" checked>
         </label>
         <label class="menu-toggle">
+          <span>Visual Hints</span>
+          <input type="checkbox" id="moveHintsToggle" checked>
+        </label>
+        <label class="menu-select">
+          <span>Interaction Mode</span>
+          <select id="coachModeSelect">
+            <option value="passive">Passive</option>
+            <option value="guided" selected>Guided</option>
+            <option value="review">Review</option>
+          </select>
+        </label>
+        <label class="menu-toggle">
           <span>Show Coach Says Messages</span>
           <input type="checkbox" id="coachSaysToggle" checked>
         </label>
         <label class="menu-toggle">
-          <span>Auto Play Again</span>
-          <input type="checkbox" id="autoPlayToggle">
+          <span>Coach Voice</span>
+          <input type="checkbox" id="voiceToggle">
+        </label>
+        <label class="menu-toggle">
+          <span>Motivational Messages</span>
+          <input type="checkbox" id="motivationToggle" checked>
+        </label>
+        <label class="menu-toggle">
+          <span>Threat Reminders</span>
+          <input type="checkbox" id="remindersToggle" checked>
         </label>
       </div>
     </div>
@@ -32,6 +62,14 @@
       <button class="menu-btn">View ▾</button>
       <div class="menu-dropdown">
         <button id="progressBtn">📊 Progress</button>
+        <button id="reviewBtn">🧠 Game Review</button>
+      </div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-btn">Help ▾</button>
+      <div class="menu-dropdown">
+        <button id="helpBtn">❓ How It Works</button>
+        <button id="puzzleHelpBtn">🧩 Puzzle Guide</button>
       </div>
     </div>
   </nav>
@@ -47,7 +85,7 @@
     <div class="game-area">
       <!-- Left Panel - Controls -->
       <div class="panel left-panel">
-        <div class="control-section">
+        <div id="gameControlsSection" class="control-section">
           <h2>Game Controls</h2>
           <div class="button-group">
             <button id="undoBtn" class="btn btn-primary" title="Undo last move">
@@ -59,18 +97,59 @@
           </div>
         </div>
 
-        <div class="control-section">
-          <h2>Coach Mode</h2>
-          <p class="coach-status">Coach Mode: <strong id="coachStatus">ON</strong></p>
-          <p class="help-text">Change coach mode in Settings</p>
+        <div id="puzzlePanel" class="control-section puzzle-panel hidden">
+          <h2>Puzzle Mode</h2>
+          <div class="puzzle-status-grid">
+            <div class="mini-stat">
+              <span class="mini-stat-label">Mode</span>
+              <strong id="puzzleModeText">Standard</strong>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label">Rating</span>
+              <strong id="puzzleRatingText">1200</strong>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label">Score</span>
+              <strong id="puzzleScoreText">0</strong>
+            </div>
+          </div>
+          <div class="puzzle-meta-list">
+            <p><strong id="puzzleTitle">Puzzle</strong></p>
+            <p id="puzzlePrompt">Find the best continuation.</p>
+            <p id="puzzleSecondaryMeta" class="puzzle-secondary-meta">Theme • Tier</p>
+          </div>
+          <div class="button-group puzzle-button-group">
+            <button id="retryPuzzleBtn" class="btn btn-secondary">Retry Puzzle</button>
+            <button id="showPuzzleHintBtn" class="btn btn-secondary">Puzzle Hint</button>
+            <button id="showPuzzleSolutionBtn" class="btn btn-secondary">Show Solution</button>
+            <button id="nextPuzzleBtn" class="btn btn-primary">Next Puzzle</button>
+            <button id="favoritePuzzleBtn" class="btn btn-secondary">☆ Favorite</button>
+            <button id="shareDailyResultBtn" class="btn btn-primary hidden">Share Result</button>
+          </div>
+          <div id="duelControls" class="duel-controls hidden">
+            <p class="duel-status">Active Solver</p>
+            <div class="duel-player-buttons">
+              <button id="duelPlayerOneBtn" class="btn btn-secondary">Player 1</button>
+              <button id="duelPlayerTwoBtn" class="btn btn-secondary">Player 2</button>
+            </div>
+            <p id="duelScoreText" class="duel-score">0 - 0</p>
+          </div>
         </div>
 
-        <div class="turn-indicator">
+        <div id="coachModeSection" class="control-section">
+          <h2>Coach Mode</h2>
+          <p class="coach-status">Coach Mode: <strong id="coachStatus">ON</strong></p>
+          <p class="coach-substatus">Interaction: <strong id="coachModeLabel">Guided</strong></p>
+          <p class="coach-substatus">Visual Hints: <strong id="moveHintsStatus">ON</strong></p>
+          <p class="help-text">Coach advice, visual move highlighting, and the hint button are separate tools.</p>
+        </div>
+
+        <div id="turnIndicatorCard" class="turn-indicator">
           <span id="turnText">White's Turn</span>
           <div id="turnPiece" class="turn-piece">♔</div>
         </div>
 
-        <div class="difficulty-display">
+        <div id="difficultyDisplayCard" class="difficulty-display">
           <span class="difficulty-label">Difficulty:</span>
           <span id="difficultyText" class="difficulty-value">Intermediate (1200)</span>
         </div>
@@ -98,9 +177,19 @@
       <!-- Right Panel - Info -->
       <div class="panel right-panel">
         <div class="info-section coach-messages">
-          <h2>🎯 Coach Says</h2>
+          <div class="coach-card-header">
+            <div class="coach-avatar" aria-hidden="true">♞</div>
+            <div>
+              <h2>🎯 Coach Says</h2>
+              <p class="coach-card-meta">Astra • <span id="coachPersonaMode">Guided</span> Mode</p>
+            </div>
+          </div>
           <div id="coachMessage" class="message-box">
             <p>Welcome! Click on a piece to see where it can move!</p>
+          </div>
+          <div class="coach-actions">
+            <button id="coachHintBtn" class="btn btn-secondary">Need a Hint</button>
+            <button id="openReviewBtn" class="btn btn-primary">Open Review</button>
           </div>
         </div>
       </div>
@@ -208,9 +297,15 @@
     <!-- Game Over Modal -->
     <div id="gameOverModal" class="modal hidden">
       <div class="modal-content game-over-modal">
-        <h2 id="gameOverTitle">Game Over!</h2>
+        <div class="modal-header">
+          <h2 id="gameOverTitle">Game Over!</h2>
+          <button id="closeGameOverBtn" class="modal-close" title="Close">✕</button>
+        </div>
         <p id="gameOverMessage" class="game-over-message"></p>
-        <button id="newGameBtn" class="btn btn-primary">Play Again</button>
+        <div class="game-over-actions">
+          <button id="reviewGameBtn" class="btn btn-secondary">Review Game</button>
+          <button id="newGameBtn" class="btn btn-primary">Play Again</button>
+        </div>
       </div>
     </div>
 
@@ -235,6 +330,227 @@
         <div class="progress-actions">
           <button id="resetProgressBtn" class="btn btn-danger">🗑️ Reset Progress</button>
           <button id="closeProgressBtn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal hidden">
+      <div class="modal-content review-modal">
+        <div class="modal-header">
+          <h2>🧠 Coach Review</h2>
+          <button id="closeReviewBtn" class="modal-close" title="Close">✕</button>
+        </div>
+        <div id="reviewSummary" class="review-summary"></div>
+        <div id="reviewThemes" class="review-themes"></div>
+        <div id="reviewEntries" class="review-entries"></div>
+      </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal hidden">
+      <div class="modal-content help-modal">
+        <div class="modal-header">
+          <h2>❓ How Chess Coach Works</h2>
+          <button id="closeHelpBtn" class="modal-close" title="Close">✕</button>
+        </div>
+        <div class="help-sections">
+          <section class="help-section">
+            <h3>Three Different Help Systems</h3>
+            <p><strong>Coach Mode</strong> gives educational commentary, warnings, and post-game review.</p>
+            <p><strong>Visual Hints</strong> are the green move dots and red capture rings that appear when you select a piece.</p>
+            <p><strong>Need a Hint</strong> gives a text suggestion about ideas to consider without playing the move for you.</p>
+          </section>
+          <section class="help-section">
+            <h3>Interaction Modes</h3>
+            <p><strong>Passive</strong> speaks only on major tactical or strategic moments.</p>
+            <p><strong>Guided</strong> gives more frequent teaching during the game.</p>
+            <p><strong>Review</strong> is the deepest teaching mode and is best paired with post-game analysis.</p>
+          </section>
+          <section class="help-section">
+            <h3>Settings</h3>
+            <p><strong>Show Coach Says Messages</strong> turns the coach text panel on or off.</p>
+            <p><strong>Coach Voice</strong> uses your browser's built-in speech synthesis for spoken advice.</p>
+            <p><strong>Motivational Messages</strong> lets the coach encourage you when there is no urgent warning.</p>
+            <p><strong>Threat Reminders</strong> makes the coach call out loose pieces, danger, and king-safety issues.</p>
+          </section>
+          <section class="help-section">
+            <h3>Persistence</h3>
+            <p>Your progress rating, unfinished game, and saved reviews are stored locally in your browser so you can return later.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="puzzleHelpModal" class="modal hidden">
+      <div class="modal-content help-modal">
+        <div class="modal-header">
+          <h2>🧩 Puzzle Guide</h2>
+          <button id="closePuzzleHelpBtn" class="modal-close" title="Close">✕</button>
+        </div>
+        <div class="help-sections">
+          <section class="help-section">
+            <h3>Puzzle Modes</h3>
+            <p><strong>Practice Puzzle</strong> lets you train by tier, category, pack, favorites, theme, or rating range from Puzzle Hub.</p>
+            <p><strong>Daily Puzzle</strong> gives you one locally selected puzzle per day based on your current puzzle rating.</p>
+            <p><strong>Puzzle Rush</strong> is a timed run that keeps serving new puzzles until time expires or the run ends.</p>
+            <p><strong>Puzzle Duel</strong> is a local two-player race where both players compete through the same sequence of puzzles.</p>
+          </section>
+          <section class="help-section">
+            <h3>Browsing And Favorites</h3>
+            <p><strong>Puzzle Hub</strong> includes curated packs, your saved favorites, and the full All Puzzles browser.</p>
+            <p><strong>Favorites</strong> let you bookmark puzzles for later and replay them from the dedicated favorites section.</p>
+            <p><strong>Browser filters</strong> let you search by tier, category, theme, pack, rating range, and favorites-only combinations.</p>
+          </section>
+          <section class="help-section">
+            <h3>Puzzle Controls</h3>
+            <p><strong>Retry Puzzle</strong> resets the current position so you can solve it cleanly again.</p>
+            <p><strong>Puzzle Hint</strong> gives a guided nudge without auto-playing the move for you.</p>
+            <p><strong>Show Solution</strong> reveals the full line when you want to study the answer directly.</p>
+            <p><strong>Next Puzzle</strong> loads another puzzle from the current mode or training context.</p>
+          </section>
+          <section class="help-section">
+            <h3>How Puzzle Help Works</h3>
+            <p><strong>Coach Mode</strong> and <strong>Visual Hints</strong> remain separate toggles during puzzle play.</p>
+            <p><strong>Mistakes</strong> counts incorrect tries on the active puzzle.</p>
+            <p><strong>Progress</strong> such as rating, favorites, completions, and achievements is stored locally so you can come back later.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Puzzle Hub Modal -->
+    <div id="puzzleHubModal" class="modal hidden">
+      <div class="modal-content puzzle-hub-modal">
+        <div class="modal-header">
+          <h2>🧩 Puzzle Hub</h2>
+          <button id="closePuzzleHubBtn" class="modal-close" title="Close">✕</button>
+        </div>
+        <div class="puzzle-hub-grid">
+          <section class="puzzle-hub-section">
+            <h3>Practice Puzzle</h3>
+            <label class="menu-select hub-select">
+              <span>Difficulty Tier</span>
+              <select id="puzzleTierSelect">
+                <option value="all">All Tiers</option>
+                <option value="beginner">Beginner (400–800)</option>
+                <option value="intermediate">Intermediate (800–1400)</option>
+                <option value="advanced">Advanced (1400–2000)</option>
+                <option value="master">Master (2000+)</option>
+              </select>
+            </label>
+            <label class="menu-select hub-select">
+              <span>Category</span>
+              <select id="puzzleCategorySelect"></select>
+            </label>
+            <label class="menu-select hub-select">
+              <span>Pack</span>
+              <select id="puzzlePackSelect"></select>
+            </label>
+            <button id="startPracticePuzzleBtn" class="btn btn-primary">Start Practice Puzzle</button>
+          </section>
+          <section class="puzzle-hub-section">
+            <h3>Fast Modes</h3>
+            <div class="hub-button-grid">
+              <button id="startDailyPuzzleBtn" class="btn btn-primary">Daily Puzzle</button>
+              <button id="rush3Btn" class="btn btn-secondary">Rush 3 Min</button>
+              <button id="rush5Btn" class="btn btn-secondary">Rush 5 Min</button>
+              <button id="rushSurvivalBtn" class="btn btn-secondary">Rush Survival</button>
+              <button id="startDuelBtn" class="btn btn-primary">Start Local Duel</button>
+            </div>
+          </section>
+          <section class="puzzle-hub-section">
+            <h3>Puzzle Packs</h3>
+            <div id="puzzlePackCards" class="pack-card-grid"></div>
+          </section>
+          <section class="puzzle-hub-section">
+            <h3>Your Favorites</h3>
+            <div id="favoritePuzzleList" class="favorite-puzzle-list"></div>
+          </section>
+          <section class="puzzle-hub-section puzzle-browser-section">
+            <div class="puzzle-browser-header">
+              <h3>All Puzzles</h3>
+              <span id="puzzleBrowserResultCount" class="browser-result-count">0 puzzles</span>
+            </div>
+            <div class="puzzle-browser-controls">
+              <input id="puzzleSearchInput" class="browser-search-input" type="search" placeholder="Search by ID, theme, category, rating, or keyword">
+              <div class="browser-filter-grid">
+                <label class="menu-select hub-select">
+                  <span>Category</span>
+                  <select id="browserCategorySelect"></select>
+                </label>
+                <label class="menu-select hub-select">
+                  <span>Tier</span>
+                  <select id="browserTierSelect">
+                    <option value="all">All Tiers</option>
+                    <option value="beginner">Beginner (400–800)</option>
+                    <option value="intermediate">Intermediate (800–1400)</option>
+                    <option value="advanced">Advanced (1400–2000)</option>
+                    <option value="master">Master (2000+)</option>
+                  </select>
+                </label>
+                <label class="menu-select hub-select">
+                  <span>Theme</span>
+                  <select id="browserThemeSelect"></select>
+                </label>
+                <label class="menu-select hub-select">
+                  <span>Pack</span>
+                  <select id="browserPackSelect"></select>
+                </label>
+                <label class="menu-select hub-select">
+                  <span>Sort By</span>
+                  <select id="browserSortSelect">
+                    <option value="rating-asc">Rating (low → high)</option>
+                    <option value="rating-desc">Rating (high → low)</option>
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="most-played">Most played</option>
+                    <option value="least-played">Least played</option>
+                  </select>
+                </label>
+                <label class="browser-rating-field">
+                  <span>Min Rating</span>
+                  <input id="browserMinRatingInput" type="number" min="0" step="50" placeholder="Any">
+                </label>
+                <label class="browser-rating-field">
+                  <span>Max Rating</span>
+                  <input id="browserMaxRatingInput" type="number" min="0" step="50" placeholder="Any">
+                </label>
+                <label class="browser-favorites-toggle">
+                  <input id="browserFavoritesOnlyToggle" type="checkbox">
+                  <span>Favorites only</span>
+                </label>
+              </div>
+            </div>
+            <div id="allPuzzleList" class="all-puzzle-list"></div>
+            <button id="loadMorePuzzlesBtn" class="btn btn-secondary hidden">Load More Puzzles</button>
+          </section>
+          <section class="puzzle-hub-section">
+            <h3>Leaderboards</h3>
+            <div id="leaderboardSummary" class="leaderboard-summary"></div>
+          </section>
+          <section class="puzzle-hub-section">
+            <h3>Achievements</h3>
+            <div id="achievementGrid" class="achievement-grid"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="puzzlePreviewModal" class="modal hidden">
+      <div class="modal-content puzzle-preview-modal">
+        <div class="modal-header">
+          <h2>Puzzle Preview</h2>
+          <button id="closePuzzlePreviewBtn" class="modal-close" title="Close">✕</button>
+        </div>
+        <div class="puzzle-preview-grid">
+          <div id="puzzlePreviewBoard" class="mini-fen-board" aria-label="Puzzle position preview"></div>
+          <div class="puzzle-preview-details">
+            <h3 id="puzzlePreviewTitle">Puzzle</h3>
+            <p id="puzzlePreviewPrompt">Find the best continuation.</p>
+            <div id="puzzlePreviewMeta" class="preview-meta-list"></div>
+            <button id="startPreviewPuzzleBtn" class="btn btn-primary">Start Puzzle</button>
+          </div>
         </div>
       </div>
     </div>
@@ -292,8 +608,11 @@
   <script src="engine.js"></script>
   <script src="ai.js"></script>
   <script src="coach.js"></script>
+  <script src="assets/puzzles/puzzles-data.js"></script>
+  <script src="puzzles.js"></script>
   <script src="ui.js"></script>
   <script src="app.js"></script>
   <script src="progress.js"></script>
 </body>
 </html>
+

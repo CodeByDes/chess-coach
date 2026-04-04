@@ -42,10 +42,21 @@ class ChessProgress {
    * Adjust the player's ELO estimate. Positive delta for wins,
    * negative for losses. Clamped to 400–3000.
    */
-  updatePlayerElo(delta) {
+  updatePlayerElo(opponentElo, actualScore) {
+    const expectedScore = 1 / (1 + Math.pow(10, (opponentElo - this.playerElo) / 400));
+    const kFactor = this.getKFactor();
+    const delta = Math.round(kFactor * (actualScore - expectedScore));
+
     this.playerElo += delta;
     this.playerElo = Math.max(400, Math.min(3000, this.playerElo));
     this.saveProgress();
+    return delta;
+  }
+
+  getKFactor() {
+    if (this.gamesPlayed < 30) {return 32;}
+    if (this.playerElo >= 2400) {return 16;}
+    return 24;
   }
 
   updateBestStreak(streak) {
@@ -60,7 +71,7 @@ class ChessProgress {
   }
 
   displayProgress(ui) {
-    if (ui) ui.updateProgressDisplay(this.getStats());
+    if (ui) {ui.updateProgressDisplay(this.getStats());}
   }
 
   /**

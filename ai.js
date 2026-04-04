@@ -51,7 +51,7 @@ class ChessAI {
    * Decide on a move. The AI might blunder, make a weak move, or play
    * its best — depending on the current difficulty setting.
    */
-  async makeMove(board, aiColor) {
+  async makeMove(board, _aiColor) {
     this.isThinking = true;
     const config = this.getConfig();
 
@@ -87,7 +87,7 @@ class ChessAI {
    * Evaluate every legal move and pick one from the bottom half.
    * This simulates a weaker player missing the best continuation.
    */
-  pickWeakMove(board, moves, depth) {
+  pickWeakMove(board, moves, _depth) {
     const evaluated = moves.map(move => {
       const state = board.makeMove(move);
       const score = -this.engine.evaluate(board);  // Negate — turn flips after the move
