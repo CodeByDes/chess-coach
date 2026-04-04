@@ -1,9 +1,9 @@
-/**
+﻿/**
  * ui.js - User Interface Management
  *
  * Handles all DOM interaction: rendering the board, painting pieces,
  * wiring up buttons and modals, and displaying coach messages.
- * The app class calls these methods — this file doesn't make game decisions.
+ * The app class calls these methods â€” this file doesn't make game decisions.
  */
 
 class ChessUI {
@@ -20,6 +20,10 @@ class ChessUI {
     this.eloModal = null;
     this.aiThinking = null;
     this.progressModal = null;
+    this.reviewModal = null;
+    this.helpModal = null;
+    this.puzzleHelpModal = null;
+    this.puzzleHubModal = null;
 
     // State
     this.selectedSquare = null;
@@ -30,10 +34,11 @@ class ChessUI {
     // Cached piece SVGs (loaded once at startup)
     this.pieceSVGs = {};
 
-    // Callbacks — set by app.js so the UI can push events back up
+    // Callbacks â€” set by app.js so the UI can push events back up
     this.onSquareClick = null;
     this.onPromotionChoice = null;
     this.onNewGame = null;
+    this.onPlayAgain = null;
     this.onUndo = null;
     this.onCoachToggle = null;
     this.onEloSelect = null;
@@ -42,10 +47,43 @@ class ChessUI {
     this.onResetProgress = null;
     this.onCloseProgress = null;
     this.onCloseEloModal = null;
+    this.onCloseGameOver = null;
     this.onCoachSaysToggle = null;
-    this.onAutoPlayToggle = null;
     this.onTimerToggle = null;   // Timer on/off inside the ELO modal
     this.onTimerSelect = null;   // Duration button inside the ELO modal
+    this.onMoveHintsToggle = null;
+    this.onCoachModeSelect = null;
+    this.onVoiceToggle = null;
+    this.onMotivationToggle = null;
+    this.onRemindersToggle = null;
+    this.onShowReview = null;
+    this.onCloseReview = null;
+    this.onRequestHint = null;
+    this.onShowHelp = null;
+    this.onCloseHelp = null;
+    this.onShowPuzzleHelp = null;
+    this.onClosePuzzleHelp = null;
+    this.onShowPuzzleHub = null;
+    this.onClosePuzzleHub = null;
+    this.onStartStandardMode = null;
+    this.onStartDailyPuzzle = null;
+    this.onStartPuzzleRush = null;
+    this.onStartPuzzleDuel = null;
+    this.onStartPracticePuzzle = null;
+    this.onRetryPuzzle = null;
+    this.onShowPuzzleHint = null;
+    this.onShowPuzzleSolution = null;
+    this.onNextPuzzle = null;
+    this.onToggleFavoritePuzzle = null;
+    this.onShareDailyResult = null;
+    this.onSetDuelPlayer = null;
+    this.onStartFavoritePuzzle = null;
+    this.onPuzzleBrowserChange = null;
+    this.onLoadMorePuzzles = null;
+    this.onPreviewPuzzle = null;
+    this.onClosePuzzlePreview = null;
+    this.onStartPreviewPuzzle = null;
+    this.onToggleBrowserFavorite = null;
   }
 
   /**
@@ -64,6 +102,10 @@ class ChessUI {
     this.eloModal = document.getElementById('eloModal');
     this.aiThinking = document.getElementById('aiThinking');
     this.progressModal = document.getElementById('progressModal');
+    this.reviewModal = document.getElementById('reviewModal');
+    this.helpModal = document.getElementById('helpModal');
+    this.puzzleHelpModal = document.getElementById('puzzleHelpModal');
+    this.puzzleHubModal = document.getElementById('puzzleHubModal');
 
     this.setupEventListeners();
     this.loadPieceSVGs();
@@ -80,7 +122,7 @@ class ChessUI {
     pieces.forEach(piece => {
       fetch(`assets/pieces/${piece}.svg`)
         .then(response => {
-          if (!response.ok) throw new Error('SVG not found');
+          if (!response.ok) {throw new Error('SVG not found');}
           return response.text();
         })
         .then(svgContent => {
@@ -91,7 +133,7 @@ class ChessUI {
           if (svgElement) {
             // Re-wrap the inner paths/groups in a clean SVG wrapper
             let innerContent = '';
-            for (const child of svgElement.children) innerContent += child.outerHTML;
+            for (const child of svgElement.children) {innerContent += child.outerHTML;}
             this.pieceSVGs[piece] = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45">${innerContent}</svg>`;
           } else {
             throw new Error('No SVG element found');
@@ -131,13 +173,13 @@ class ChessUI {
     // Board clicks delegate to app.js
     this.boardElement.addEventListener('click', (e) => {
       const square = e.target.closest('.square');
-      if (square) this.onSquareClick?.(parseInt(square.dataset.row), parseInt(square.dataset.col));
+      if (square) {this.onSquareClick?.(parseInt(square.dataset.row), parseInt(square.dataset.col));}
     });
 
     // Core buttons
     document.getElementById('undoBtn')?.addEventListener('click', () => this.onUndo?.());
     document.getElementById('resetBtn')?.addEventListener('click', () => this.onNewGame?.());
-    document.getElementById('newGameBtn')?.addEventListener('click', () => this.onNewGame?.());
+    document.getElementById('newGameBtn')?.addEventListener('click', () => this.onPlayAgain?.());
 
     // Coach mode toggle
     document.getElementById('coachToggle')?.addEventListener('change', (e) => {
@@ -145,7 +187,7 @@ class ChessUI {
       this.onCoachToggle?.(e.target.checked);
     });
 
-    // Promotion modal — buttons are populated dynamically based on color
+    // Promotion modal â€” buttons are populated dynamically based on color
     document.querySelectorAll('.promotion-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         this.promotionModal.classList.add('hidden');
@@ -169,18 +211,61 @@ class ChessUI {
 
     // Close buttons
     document.getElementById('closeEloBtn')?.addEventListener('click', () => this.onCloseEloModal?.());
+    document.getElementById('closeGameOverBtn')?.addEventListener('click', () => this.onCloseGameOver?.());
     document.getElementById('progressBtn')?.addEventListener('click', () => this.onShowProgress?.());
+    document.getElementById('reviewBtn')?.addEventListener('click', () => this.onShowReview?.());
+    document.getElementById('helpBtn')?.addEventListener('click', () => this.onShowHelp?.());
+    document.getElementById('puzzleHelpBtn')?.addEventListener('click', () => this.onShowPuzzleHelp?.());
+    document.getElementById('standardModeBtn')?.addEventListener('click', () => this.onStartStandardMode?.());
+    document.getElementById('puzzlesModeBtn')?.addEventListener('click', () => this.onShowPuzzleHub?.());
+    document.getElementById('dailyPuzzleBtn')?.addEventListener('click', () => this.onStartDailyPuzzle?.());
+    document.getElementById('puzzleRushBtn')?.addEventListener('click', () => this.onStartPuzzleRush?.('3m'));
+    document.getElementById('puzzleDuelBtn')?.addEventListener('click', () => this.onStartPuzzleDuel?.());
     document.getElementById('resetProgressBtn')?.addEventListener('click', () => this.onResetProgress?.());
     document.getElementById('closeProgressBtn')?.addEventListener('click', () => this.onCloseProgress?.());
+    document.getElementById('openReviewBtn')?.addEventListener('click', () => this.onShowReview?.());
+    document.getElementById('reviewGameBtn')?.addEventListener('click', () => this.onShowReview?.());
+    document.getElementById('closeReviewBtn')?.addEventListener('click', () => this.onCloseReview?.());
+    document.getElementById('closeHelpBtn')?.addEventListener('click', () => this.onCloseHelp?.());
+    document.getElementById('closePuzzleHelpBtn')?.addEventListener('click', () => this.onClosePuzzleHelp?.());
+    document.getElementById('closePuzzleHubBtn')?.addEventListener('click', () => this.onClosePuzzleHub?.());
+    document.getElementById('coachHintBtn')?.addEventListener('click', () => this.onRequestHint?.());
+    document.getElementById('startPracticePuzzleBtn')?.addEventListener('click', () => this.onStartPracticePuzzle?.());
+    document.getElementById('startDailyPuzzleBtn')?.addEventListener('click', () => this.onStartDailyPuzzle?.());
+    document.getElementById('rush3Btn')?.addEventListener('click', () => this.onStartPuzzleRush?.('3m'));
+    document.getElementById('rush5Btn')?.addEventListener('click', () => this.onStartPuzzleRush?.('5m'));
+    document.getElementById('rushSurvivalBtn')?.addEventListener('click', () => this.onStartPuzzleRush?.('survival'));
+    document.getElementById('startDuelBtn')?.addEventListener('click', () => this.onStartPuzzleDuel?.());
+    document.getElementById('retryPuzzleBtn')?.addEventListener('click', () => this.onRetryPuzzle?.());
+    document.getElementById('showPuzzleHintBtn')?.addEventListener('click', () => this.onShowPuzzleHint?.());
+    document.getElementById('showPuzzleSolutionBtn')?.addEventListener('click', () => this.onShowPuzzleSolution?.());
+    document.getElementById('nextPuzzleBtn')?.addEventListener('click', () => this.onNextPuzzle?.());
+    document.getElementById('favoritePuzzleBtn')?.addEventListener('click', () => this.onToggleFavoritePuzzle?.());
+    document.getElementById('shareDailyResultBtn')?.addEventListener('click', () => this.onShareDailyResult?.());
+    document.getElementById('duelPlayerOneBtn')?.addEventListener('click', () => this.onSetDuelPlayer?.('p1'));
+    document.getElementById('duelPlayerTwoBtn')?.addEventListener('click', () => this.onSetDuelPlayer?.('p2'));
+    document.getElementById('loadMorePuzzlesBtn')?.addEventListener('click', () => this.onLoadMorePuzzles?.());
+    document.getElementById('closePuzzlePreviewBtn')?.addEventListener('click', () => this.onClosePuzzlePreview?.());
+    document.getElementById('startPreviewPuzzleBtn')?.addEventListener('click', () => this.onStartPreviewPuzzle?.());
+
+    ['puzzleSearchInput', 'browserCategorySelect', 'browserTierSelect', 'browserThemeSelect', 'browserPackSelect', 'browserSortSelect', 'browserMinRatingInput', 'browserMaxRatingInput', 'browserFavoritesOnlyToggle']
+      .forEach(id => {
+        const eventName = id === 'puzzleSearchInput' || id.endsWith('Input') ? 'input' : 'change';
+        document.getElementById(id)?.addEventListener(eventName, () => this.onPuzzleBrowserChange?.());
+      });
 
     // Settings toggles
     document.getElementById('coachSaysToggle')?.addEventListener('change', (e) => this.onCoachSaysToggle?.(e.target.checked));
-    document.getElementById('autoPlayToggle')?.addEventListener('change', (e) => this.onAutoPlayToggle?.(e.target.checked));
+    document.getElementById('moveHintsToggle')?.addEventListener('change', (e) => this.onMoveHintsToggle?.(e.target.checked));
+    document.getElementById('coachModeSelect')?.addEventListener('change', (e) => this.onCoachModeSelect?.(e.target.value));
+    document.getElementById('voiceToggle')?.addEventListener('change', (e) => this.onVoiceToggle?.(e.target.checked));
+    document.getElementById('motivationToggle')?.addEventListener('change', (e) => this.onMotivationToggle?.(e.target.checked));
+    document.getElementById('remindersToggle')?.addEventListener('change', (e) => this.onRemindersToggle?.(e.target.checked));
 
     // Timer controls inside the ELO modal
     document.getElementById('eloTimerToggle')?.addEventListener('change', (e) => {
       const timerOptions = document.getElementById('timerOptions');
-      if (timerOptions) timerOptions.style.display = e.target.checked ? 'flex' : 'none';
+      if (timerOptions) {timerOptions.style.display = e.target.checked ? 'flex' : 'none';}
       this.onTimerToggle?.(e.target.checked);
     });
 
@@ -206,6 +291,36 @@ class ChessUI {
           this.onCloseEloModal?.();
           return;
         }
+        const gameOverModal = document.getElementById('gameOverModal');
+        if (gameOverModal && !gameOverModal.classList.contains('hidden')) {
+          this.onCloseGameOver?.();
+          return;
+        }
+        const reviewModal = document.getElementById('reviewModal');
+        if (reviewModal && !reviewModal.classList.contains('hidden')) {
+          this.onCloseReview?.();
+          return;
+        }
+        const helpModal = document.getElementById('helpModal');
+        if (helpModal && !helpModal.classList.contains('hidden')) {
+          this.onCloseHelp?.();
+          return;
+        }
+        const puzzleHelpModal = document.getElementById('puzzleHelpModal');
+        if (puzzleHelpModal && !puzzleHelpModal.classList.contains('hidden')) {
+          this.onClosePuzzleHelp?.();
+          return;
+        }
+        const puzzleHubModal = document.getElementById('puzzleHubModal');
+        if (puzzleHubModal && !puzzleHubModal.classList.contains('hidden')) {
+          const puzzlePreviewModal = document.getElementById('puzzlePreviewModal');
+          if (puzzlePreviewModal && !puzzlePreviewModal.classList.contains('hidden')) {
+            this.onClosePuzzlePreview?.();
+            return;
+          }
+          this.onClosePuzzleHub?.();
+          return;
+        }
         this.selectedSquare = null;
         this.renderBoard();
       }
@@ -217,11 +332,11 @@ class ChessUI {
   // ============================================
 
   /**
-   * Build the 8×8 grid from scratch. Called after SVGs load,
+   * Build the 8Ã—8 grid from scratch. Called after SVGs load,
    * after every move, and when the board is flipped.
    */
   renderBoard() {
-    if (!this.boardElement) return;
+    if (!this.boardElement) {return;}
     this.boardElement.innerHTML = '';
 
     // When flipped (playing as Black), reverse the render order
@@ -239,7 +354,7 @@ class ChessUI {
         square.dataset.col = boardCol;
 
         const piece = window.chessApp?.board?.getPiece(boardRow, boardCol);
-        if (piece) square.appendChild(this.createPieceElement(piece));
+        if (piece) {square.appendChild(this.createPieceElement(piece));}
 
         this.boardElement.appendChild(square);
       }
@@ -292,7 +407,7 @@ class ChessUI {
       container.textContent = piece;
     }
 
-    // Drag events — the app handles the actual drop logic
+    // Drag events â€” the app handles the actual drop logic
     container.addEventListener('dragstart', (e) => {
       this.draggedPiece = {
         row: parseInt(container.parentElement.dataset.row),
@@ -315,16 +430,16 @@ class ChessUI {
    * last-move glow, and check warning on the king.
    */
   updateHighlights() {
-    if (!this.boardElement || this.boardElement.children.length === 0) return;
+    if (!this.boardElement || this.boardElement.children.length === 0) {return;}
 
-    // Strip every highlight class first — clean slate
+    // Strip every highlight class first â€” clean slate
     this.boardElement.querySelectorAll('.square').forEach(sq => {
       sq.classList.remove('selected', 'legal-move', 'last-move', 'check', 'hint', 'capture');
     });
 
     const board = window.chessApp?.board;
     const coach = window.chessApp?.coach;
-    if (!board) return;
+    if (!board) {return;}
 
     // Selected square + its legal moves
     if (this.selectedSquare) {
@@ -333,18 +448,18 @@ class ChessUI {
       const piece = board.getPiece(row, col);
       square?.classList.add('selected');
 
-      if (coach?.isEnabled() && piece && board.isOwnPiece(piece)) {
+      if (coach?.isMoveHintsEnabled() && piece && board.isOwnPiece(piece)) {
         board.generateLegalMovesForPiece(row, col).forEach(move => {
           const target = this.getSquareElement(move.to.row, move.to.col);
           if (target) {
             target.classList.add('legal-move');
-            if (move.capture) target.classList.add('capture');
+            if (move.capture) {target.classList.add('capture');}
           }
         });
       }
     }
 
-    // Last move — highlight both the origin and destination
+    // Last move â€” highlight both the origin and destination
     const lastMove = board.moveHistory.length > 0 ? board.moveHistory[board.moveHistory.length - 1] : null;
     if (lastMove?.move?.from && lastMove.move.to) {
       this.getSquareElement(lastMove.move.from.row, lastMove.move.from.col)?.classList.add('last-move');
@@ -354,7 +469,7 @@ class ChessUI {
     // King in check
     if (board.isInCheck()) {
       const kingPos = board.findKing(board.currentTurn);
-      if (kingPos) this.getSquareElement(kingPos.row, kingPos.col)?.classList.add('check');
+      if (kingPos) {this.getSquareElement(kingPos.row, kingPos.col)?.classList.add('check');}
     }
   }
 
@@ -370,17 +485,17 @@ class ChessUI {
 
   /**
    * Show a coach message in the side panel.
-   * `force: true` bypasses the "Coach Says" setting — used for the
+   * `force: true` bypasses the "Coach Says" setting â€” used for the
    * initial welcome message so players always see the difficulty.
    */
   showMessage(message, style = '', force = false) {
-    if (!this.messageElement) return;
+    if (!this.messageElement) {return;}
 
     const app = window.chessApp;
-    if (!force && app && !app.showCoachSays) return;
+    if (!force && app && !app.showCoachSays) {return;}
 
     this.messageElement.classList.remove('good', 'warning', 'encouraging');
-    if (style) this.messageElement.classList.add(style);
+    if (style) {this.messageElement.classList.add(style);}
 
     // Fade transition
     this.messageElement.style.opacity = '0';
@@ -390,6 +505,18 @@ class ChessUI {
     }, 200);
   }
 
+  updateCoachStatus(details = {}) {
+    const coachStatus = document.getElementById('coachStatus');
+    const coachModeLabel = document.getElementById('coachModeLabel');
+    const coachPersonaMode = document.getElementById('coachPersonaMode');
+    const moveHintsStatus = document.getElementById('moveHintsStatus');
+
+    if (coachStatus) {coachStatus.textContent = details.enabled ? 'ON' : 'OFF';}
+    if (coachModeLabel) {coachModeLabel.textContent = details.modeLabel || 'Guided';}
+    if (coachPersonaMode) {coachPersonaMode.textContent = details.modeLabel || 'Guided';}
+    if (moveHintsStatus) {moveHintsStatus.textContent = details.moveHintsEnabled ? 'ON' : 'OFF';}
+  }
+
   clearMessage() { this.showMessage(''); }
 
   // ============================================
@@ -397,18 +524,25 @@ class ChessUI {
   // ============================================
 
   updateTurnIndicator(color, inCheck = false) {
-    if (!this.turnTextElement || !this.turnPieceElement) return;
+    if (!this.turnTextElement || !this.turnPieceElement) {return;}
 
     const piece = color === WHITE ? '♔' : '♚';
     const name = color === WHITE ? "White" : "Black";
 
     if (inCheck) {
-      this.turnTextElement.textContent = `${name}'s Turn — CHECK!`;
+      this.turnTextElement.textContent = `${name}'s Turn - CHECK!`;
       this.turnTextElement.style.color = '#f44336';
     } else {
       this.turnTextElement.textContent = `${name}'s Turn`;
       this.turnTextElement.style.color = 'white';
     }
+    this.turnPieceElement.textContent = piece;
+  }
+
+  setTurnIndicatorText(text, piece = '♟') {
+    if (!this.turnTextElement || !this.turnPieceElement) {return;}
+    this.turnTextElement.textContent = text;
+    this.turnTextElement.style.color = 'white';
     this.turnPieceElement.textContent = piece;
   }
 
@@ -424,7 +558,7 @@ class ChessUI {
   // ============================================
 
   showPromotionModal(color) {
-    if (!this.promotionModal) return;
+    if (!this.promotionModal) {return;}
     const pieces = color === WHITE ? ['♕','♖','♗','♘'] : ['♛','♜','♝','♞'];
     this.promotionModal.querySelectorAll('.promotion-btn').forEach((btn, i) => { btn.textContent = pieces[i]; });
     this.promotionModal.classList.remove('hidden');
@@ -432,36 +566,441 @@ class ChessUI {
 
   hidePromotionModal() { this.promotionModal?.classList.add('hidden'); }
 
-  showGameOverModal(title, message) {
-    if (!this.gameOverModal) return;
+  showGameOverModal(title, message, options = {}) {
+    if (!this.gameOverModal) {return;}
+    const reviewButton = document.getElementById('reviewGameBtn');
+    const playAgainButton = document.getElementById('newGameBtn');
+    const showReview = options.showReview !== false;
     document.getElementById('gameOverTitle').textContent = title;
     document.getElementById('gameOverMessage').textContent = message;
+    if (reviewButton) {reviewButton.classList.toggle('hidden', !showReview);}
+    if (playAgainButton) {playAgainButton.classList.toggle('full-width', !showReview);}
     this.gameOverModal.classList.remove('hidden');
   }
 
   hideGameOverModal() { this.gameOverModal?.classList.add('hidden'); }
 
-  showEloModal() { if (this.eloModal) this.eloModal.classList.remove('hidden'); }
+  showEloModal() { if (this.eloModal) {this.eloModal.classList.remove('hidden');} }
   hideEloModal() { this.eloModal?.classList.add('hidden'); }
 
   showProgressModal(showing) {
-    if (!this.progressModal) return;
+    if (!this.progressModal) {return;}
     this.progressModal.classList.toggle('hidden', !showing);
   }
 
   hideProgressModal() { this.showProgressModal(false); }
+
+  showReviewModal(showing) {
+    if (!this.reviewModal) {return;}
+    this.reviewModal.classList.toggle('hidden', !showing);
+  }
+
+  hideReviewModal() { this.showReviewModal(false); }
+
+  showHelpModal(showing) {
+    if (!this.helpModal) {return;}
+    if (showing) {this.hidePuzzleHelpModal();}
+    this.helpModal.classList.toggle('hidden', !showing);
+  }
+
+  hideHelpModal() { this.showHelpModal(false); }
+
+  showPuzzleHelpModal(showing) {
+    if (!this.puzzleHelpModal) {return;}
+    if (showing) {this.hideHelpModal();}
+    this.puzzleHelpModal.classList.toggle('hidden', !showing);
+  }
+
+  hidePuzzleHelpModal() { this.showPuzzleHelpModal(false); }
+
+  showPuzzleHubModal(showing) {
+    if (!this.puzzleHubModal) {return;}
+    this.puzzleHubModal.classList.toggle('hidden', !showing);
+  }
+
+  hidePuzzleHubModal() { this.showPuzzleHubModal(false); }
+
+  populatePuzzleSelectors({ categories = [], packs = [] } = {}) {
+    const applyOptions = (elementId, options) => {
+      const element = document.getElementById(elementId);
+      if (!element) {return;}
+      const previousValue = element.value;
+      element.innerHTML = options.map(option => `<option value="${option.value}">${option.label}</option>`).join('');
+      if (options.some(option => option.value === previousValue)) {
+        element.value = previousValue;
+      }
+    };
+
+    applyOptions('puzzleCategorySelect', categories);
+    applyOptions('puzzlePackSelect', packs);
+  }
+
+  populatePuzzleBrowserSelectors({ categories = [], packs = [], themes = [] } = {}) {
+    const applyOptions = (elementId, options) => {
+      const element = document.getElementById(elementId);
+      if (!element) {return;}
+      const previousValue = element.value;
+      element.innerHTML = options.map(option => `<option value="${option.value}">${option.label}</option>`).join('');
+      if (options.some(option => option.value === previousValue)) {
+        element.value = previousValue;
+      }
+    };
+
+    applyOptions('browserCategorySelect', categories);
+    applyOptions('browserPackSelect', [{ value: 'all', label: 'All Packs' }, { value: 'favorite-puzzles', label: 'Favorite Puzzles' }, ...packs.filter(option => option.value !== 'all' && option.value !== 'favorite-puzzles')]);
+    applyOptions('browserThemeSelect', themes);
+  }
+
+  getPuzzleFilters() {
+    return {
+      tier: document.getElementById('puzzleTierSelect')?.value || 'all',
+      category: document.getElementById('puzzleCategorySelect')?.value || 'all',
+      pack: document.getElementById('puzzlePackSelect')?.value || 'all'
+    };
+  }
+
+  getPuzzleBrowserFilters() {
+    return {
+      search: document.getElementById('puzzleSearchInput')?.value || '',
+      category: document.getElementById('browserCategorySelect')?.value || 'all',
+      tier: document.getElementById('browserTierSelect')?.value || 'all',
+      theme: document.getElementById('browserThemeSelect')?.value || 'all',
+      pack: document.getElementById('browserPackSelect')?.value || 'all',
+      sort: document.getElementById('browserSortSelect')?.value || 'rating-asc',
+      minRating: document.getElementById('browserMinRatingInput')?.value || '',
+      maxRating: document.getElementById('browserMaxRatingInput')?.value || '',
+      favoritesOnly: document.getElementById('browserFavoritesOnlyToggle')?.checked || false
+    };
+  }
+
+  updatePuzzleDashboard(data = {}) {
+    const leaderboard = document.getElementById('leaderboardSummary');
+    const achievementGrid = document.getElementById('achievementGrid');
+    const packCards = document.getElementById('puzzlePackCards');
+    const favoriteList = document.getElementById('favoritePuzzleList');
+
+    if (leaderboard) {
+      leaderboard.innerHTML = (data.leaderboards || []).map(item => `
+        <div class="leaderboard-row">
+          <span>${item.label}</span>
+          <strong>${item.value}</strong>
+        </div>
+      `).join('');
+    }
+
+    if (achievementGrid) {
+      achievementGrid.innerHTML = (data.achievements || []).map(item => `
+        <article class="achievement-card ${item.unlocked ? 'unlocked' : ''}">
+          <strong>${item.name}</strong>
+          <p>${item.description}</p>
+        </article>
+      `).join('');
+    }
+
+    if (packCards) {
+      packCards.innerHTML = (data.packs || []).map(item => `
+        <button class="pack-card" data-pack="${item.id}">
+          <strong>${item.name}</strong>
+          <span>${item.count} puzzles</span>
+        </button>
+      `).join('');
+
+      packCards.querySelectorAll('.pack-card').forEach(button => {
+        button.addEventListener('click', () => {
+          const packSelect = document.getElementById('puzzlePackSelect');
+          if (packSelect) {packSelect.value = button.dataset.pack;}
+        });
+      });
+    }
+
+    if (favoriteList) {
+      const favorites = data.favorites || [];
+      if (favorites.length === 0) {
+        favoriteList.innerHTML = `
+          <div class="empty-state-card">
+            <p>You haven't favorited any puzzles yet. Tap the &#9733; icon on a puzzle to add it to your Favorites.</p>
+          </div>
+        `;
+      } else {
+        favoriteList.innerHTML = favorites.map(item => `
+          <button class="favorite-puzzle-card" data-puzzle-id="${item.id}">
+            <div class="favorite-puzzle-top">
+              <strong>${item.title}</strong>
+              <span>${item.rating}</span>
+            </div>
+            <p>${item.prompt}</p>
+            <div class="favorite-puzzle-meta">
+              <span>${item.category.replace(/-/g, ' ')}</span>
+              <span>${item.tier}</span>
+              <span>${item.themes.join(', ')}</span>
+            </div>
+          </button>
+        `).join('');
+
+        favoriteList.querySelectorAll('.favorite-puzzle-card').forEach(button => {
+          button.addEventListener('click', () => {
+            this.onStartFavoritePuzzle?.(parseInt(button.dataset.puzzleId));
+          });
+        });
+      }
+    }
+  }
+
+  updateAllPuzzleBrowser(data = {}, filters = {}) {
+    const list = document.getElementById('allPuzzleList');
+    const resultCount = document.getElementById('puzzleBrowserResultCount');
+    const loadMoreButton = document.getElementById('loadMorePuzzlesBtn');
+    if (!list || !resultCount || !loadMoreButton) {return;}
+
+    resultCount.textContent = `${data.total || 0} puzzles`;
+
+    if (!data.items || data.items.length === 0) {
+      const hint = this.buildEmptyFilterMessage(filters);
+      list.innerHTML = `
+        <div class="empty-state-card">
+          <p>${hint}</p>
+        </div>
+      `;
+      loadMoreButton.classList.add('hidden');
+      return;
+    }
+
+    list.innerHTML = data.items.map(item => `
+      <article class="all-puzzle-card" data-puzzle-id="${item.id}" tabindex="0" role="button" aria-label="Preview puzzle ${item.id}: ${item.title}">
+        <div class="favorite-puzzle-top">
+          <strong>${item.title}</strong>
+          <div class="puzzle-card-top-actions">
+            <span>${item.rating}</span>
+            <button class="favorite-star-btn ${item.favorite ? 'active' : ''}" data-puzzle-id="${item.id}" aria-label="${item.favorite ? 'Remove from favorites' : 'Add to favorites'}">${item.favorite ? '&#9733;' : '&#9734;'}</button>
+          </div>
+        </div>
+        <p>${item.prompt}</p>
+        <div class="favorite-puzzle-meta">
+          <span>${item.category.replace(/-/g, ' ')}</span>
+          <span>${item.tier}</span>
+          <span>${item.themes.join(', ')}</span>
+          <span>Played ${item.playCount}</span>
+        </div>
+      </article>
+    `).join('');
+
+    list.querySelectorAll('.favorite-star-btn').forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        this.onToggleBrowserFavorite?.(parseInt(button.dataset.puzzleId));
+      });
+    });
+
+    list.querySelectorAll('.all-puzzle-card').forEach(button => {
+      button.addEventListener('click', () => {
+        this.onPreviewPuzzle?.(parseInt(button.dataset.puzzleId));
+      });
+      button.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          this.onPreviewPuzzle?.(parseInt(button.dataset.puzzleId));
+        }
+      });
+    });
+
+    loadMoreButton.classList.toggle('hidden', !data.hasMore);
+  }
+
+  buildEmptyFilterMessage(filters = {}) {
+    const parts = [];
+    if (filters.tier && filters.tier !== 'all') {parts.push(`tier "${filters.tier}"`);}
+    if (filters.category && filters.category !== 'all') {parts.push(`category "${filters.category.replace(/-/g, ' ')}"`);}
+    if (filters.theme && filters.theme !== 'all') {parts.push(`theme "${filters.theme.replace(/-/g, ' ')}"`);}
+    if (filters.pack && filters.pack !== 'all') {parts.push(`pack "${filters.pack.replace(/-/g, ' ')}"`);}
+    if (filters.favoritesOnly) {parts.push('favorites only');}
+    if (filters.minRating || filters.maxRating) {
+      const range = [filters.minRating, filters.maxRating].filter(Boolean).join('–');
+      parts.push(`rating ${range}`);
+    }
+    if (filters.search) {parts.push(`search "${filters.search}"`);}
+
+    if (parts.length === 0) {
+      return 'No puzzles are available with the current filters. Try adjusting your criteria.';
+    }
+
+    return `No puzzles match ${parts.join(', ')}. Try broadening your filters — for example, select a different category, tier, or remove the search term.`;
+  }
+
+  showPuzzlePreviewModal(showing) {
+    document.getElementById('puzzlePreviewModal')?.classList.toggle('hidden', !showing);
+  }
+
+  hidePuzzlePreviewModal() { this.showPuzzlePreviewModal(false); }
+
+  updatePuzzlePreview(puzzle) {
+    const title = document.getElementById('puzzlePreviewTitle');
+    const prompt = document.getElementById('puzzlePreviewPrompt');
+    const meta = document.getElementById('puzzlePreviewMeta');
+    const board = document.getElementById('puzzlePreviewBoard');
+    const startButton = document.getElementById('startPreviewPuzzleBtn');
+    if (!title || !prompt || !meta || !board || !startButton || !puzzle) {return;}
+
+    title.textContent = puzzle.title;
+    prompt.textContent = puzzle.prompt;
+    startButton.dataset.puzzleId = String(puzzle.id);
+    meta.innerHTML = `
+      <span>ID ${puzzle.id}</span>
+      <span>Rating ${puzzle.rating}</span>
+      <span>${puzzle.category.replace(/-/g, ' ')}</span>
+      <span>${puzzle.tier}</span>
+      <span>${(puzzle.theme || []).join(', ')}</span>
+    `;
+    board.innerHTML = this.renderFenPreview(puzzle.fen);
+  }
+
+  renderFenPreview(fen) {
+    const pieceMap = {
+      p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
+      P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
+    };
+    const placement = (fen || '').split(' ')[0] || '';
+    const rows = placement.split('/');
+    return rows.map((row, rowIndex) => {
+      const squares = [];
+      row.split('').forEach(symbol => {
+        if (/\d/.test(symbol)) {
+          for (let i = 0; i < Number(symbol); i++) {squares.push('');}
+        } else {
+          squares.push(pieceMap[symbol] || '');
+        }
+      });
+      return squares.map((piece, colIndex) => `
+        <div class="mini-fen-square ${(rowIndex + colIndex) % 2 === 0 ? 'light' : 'dark'}">${piece}</div>
+      `).join('');
+    }).join('');
+  }
+
+  setPuzzleModeActive(active) {
+    const gameControlsSection = document.getElementById('gameControlsSection');
+    const coachModeSection = document.getElementById('coachModeSection');
+    const puzzlePanel = document.getElementById('puzzlePanel');
+    const turnIndicatorCard = document.getElementById('turnIndicatorCard');
+    const difficultyDisplayCard = document.getElementById('difficultyDisplayCard');
+    const coachActions = document.querySelector('.coach-actions');
+    const leftPanel = document.querySelector('.left-panel');
+    document.body?.classList.toggle('puzzle-mode-active', active);
+    leftPanel?.classList.toggle('puzzle-layout-active', active);
+
+    if (gameControlsSection) {
+      gameControlsSection.classList.toggle('hidden', active);
+      gameControlsSection.hidden = active;
+      gameControlsSection.style.display = active ? 'none' : '';
+      gameControlsSection.setAttribute('aria-hidden', active ? 'true' : 'false');
+    }
+
+    if (puzzlePanel) {
+      puzzlePanel.classList.toggle('hidden', !active);
+      puzzlePanel.hidden = !active;
+      puzzlePanel.style.display = active ? '' : 'none';
+      puzzlePanel.setAttribute('aria-hidden', active ? 'false' : 'true');
+    }
+
+    [coachModeSection, turnIndicatorCard, difficultyDisplayCard].forEach((element) => {
+      if (!element) {return;}
+      element.classList.toggle('hidden', active);
+      element.hidden = active;
+      element.style.display = active ? 'none' : '';
+      element.setAttribute('aria-hidden', active ? 'true' : 'false');
+    });
+
+    if (coachActions) {
+      coachActions.classList.toggle('hidden', active);
+      coachActions.hidden = active;
+      coachActions.style.display = active ? 'none' : '';
+      coachActions.setAttribute('aria-hidden', active ? 'true' : 'false');
+    }
+  }
+
+  updatePuzzlePanel(details = {}) {
+    const setText = (id, value) => {
+      const element = document.getElementById(id);
+      if (element) {element.textContent = value;}
+    };
+    const secondaryMeta = document.getElementById('puzzleSecondaryMeta');
+    const metaChips = [
+      details.categoryLabel ? `Category: ${details.categoryLabel}` : '',
+      details.tierLabel ? `Tier: ${details.tierLabel}` : '',
+      `Mistakes: ${details.mistakes ?? 0}`
+    ].filter(Boolean);
+
+    setText('puzzleModeText', details.mode || 'Practice');
+    setText('puzzleRatingText', details.rating ?? '1200');
+    setText('puzzleScoreText', details.score ?? '0');
+    setText('puzzleTitle', details.title || 'Puzzle');
+    setText('puzzlePrompt', details.prompt || 'Find the best continuation.');
+    if (secondaryMeta) {
+      secondaryMeta.innerHTML = metaChips.map(chip => `<span class="puzzle-meta-chip">${chip}</span>`).join('');
+    }
+    setText('duelScoreText', details.duelScore || '0 - 0');
+
+    const favoriteBtn = document.getElementById('favoritePuzzleBtn');
+    if (favoriteBtn) {favoriteBtn.textContent = details.favorite ? '★ Favorite' : '☆ Favorite';}
+
+    document.getElementById('shareDailyResultBtn')?.classList.toggle('hidden', !details.showShare);
+    document.getElementById('duelControls')?.classList.toggle('hidden', !details.showDuelControls);
+  }
+
+  updateReviewDisplay(review) {
+    const summary = document.getElementById('reviewSummary');
+    const themes = document.getElementById('reviewThemes');
+    const entries = document.getElementById('reviewEntries');
+    if (!summary || !themes || !entries) {return;}
+
+    if (!review) {
+      summary.innerHTML = '<p>No saved review yet. Finish a game to generate a coach walkthrough.</p>';
+      themes.innerHTML = '';
+      entries.innerHTML = '';
+      return;
+    }
+
+    summary.innerHTML = `
+      <div class="review-summary-card">
+        <h3>${review.outcome}</h3>
+        <p>${review.moveCount} half-moves • ${review.skillLabel} profile • ${new Date(review.createdAt).toLocaleString()}</p>
+      </div>
+    `;
+
+    themes.innerHTML = `
+      <h3>Key Themes</h3>
+      <div class="theme-chip-row">
+        ${(review.themes || []).map(theme => `<span class="theme-chip">${theme}</span>`).join('') || '<span class="theme-chip">General technique</span>'}
+      </div>
+      <div class="review-goals">
+        ${(review.goals || []).map(goal => `<p>${goal}</p>`).join('')}
+      </div>
+    `;
+
+    entries.innerHTML = `
+      <h3>Learning Moments</h3>
+      ${(review.entries || []).map(entry => `
+        <article class="review-entry ${entry.severity}">
+          <div class="review-entry-top">
+            <strong>${entry.notation || 'Position'}</strong>
+            <span>${entry.quality}</span>
+          </div>
+          <p>${entry.coachText}</p>
+          ${(entry.alternatives || []).length > 0 ? `<p class="review-alt">Ideas: ${entry.alternatives.join(' ')}</p>` : ''}
+        </article>
+      `).join('') || '<p>No major swings in this game. That usually means your decisions stayed practical and stable.</p>'}
+    `;
+  }
 
   // ============================================
   // AI Thinking Indicator
   // ============================================
 
   showAIThinking(showing) {
-    if (!this.aiThinking) return;
+    if (!this.aiThinking) {return;}
     if (showing) {
       this.aiThinking.classList.remove('hidden');
       const aiColor = window.chessApp?.aiColor || BLACK;
       const thinkingPiece = this.aiThinking.querySelector('.thinking-piece');
-      if (thinkingPiece) thinkingPiece.textContent = aiColor === WHITE ? '♔' : '♚';
+      if (thinkingPiece) {thinkingPiece.textContent = aiColor === WHITE ? '♔' : '♚';}
     } else {
       this.aiThinking.classList.add('hidden');
     }
@@ -478,7 +1017,7 @@ class ChessUI {
   }
 
   showTimerDisplay(showing) {
-    if (!this.timerDisplay) return;
+    if (!this.timerDisplay) {return;}
     this.timerDisplay.classList.toggle('hidden', !showing);
   }
 
@@ -487,12 +1026,17 @@ class ChessUI {
    * under one minute remains.
    */
   updateTimerDisplay(timeStr) {
-    if (!this.timerValue) return;
+    if (!this.timerValue) {return;}
     this.timerValue.textContent = timeStr;
 
+    if (!timeStr.includes(':')) {
+      this.timerDisplay.classList.remove('urgent');
+      return;
+    }
+
     const parts = timeStr.split(':');
-    const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    this.timerDisplay.classList.toggle('urgent', seconds < 60);
+    const seconds = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    this.timerDisplay.classList.toggle('urgent', Number.isFinite(seconds) && seconds < 60);
   }
 
   // ============================================
@@ -527,3 +1071,5 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
   window.ChessUI = ChessUI;
 }
+
+

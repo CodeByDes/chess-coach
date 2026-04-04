@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "Bash(start *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(npm install *)",
+      "Bash(mkdir *)",
+      "Bash(del *)"
+    ]
+  },
+  "$version": 3
+}

@@ -6,7 +6,6 @@
  */
 
 // Piece types (stored as single chars on the board array)
-const EMPTY = null;
 const PAWN = 'p';
 const ROOK = 'r';
 const KNIGHT = 'n';
@@ -60,7 +59,7 @@ class ChessBoard {
   }
 
   getPiece(row, col) {
-    if (row < 0 || row > 7 || col < 0 || col > 7) return null;
+    if (row < 0 || row > 7 || col < 0 || col > 7) {return null;}
     return this.board[row][col];
   }
 
@@ -77,12 +76,12 @@ class ChessBoard {
    * Uppercase = White, lowercase = Black.
    */
   getPieceColor(piece) {
-    if (!piece) return null;
+    if (!piece) {return null;}
     return piece === piece.toUpperCase() ? WHITE : BLACK;
   }
 
   getPieceType(piece) {
-    if (!piece) return null;
+    if (!piece) {return null;}
     return piece.toLowerCase();
   }
 
@@ -106,7 +105,7 @@ class ChessBoard {
    */
   generatePseudoLegalMoves(row, col) {
     const piece = this.getPiece(row, col);
-    if (!piece || !this.isOwnPiece(piece)) return [];
+    if (!piece || !this.isOwnPiece(piece)) {return [];}
 
     const pieceType = this.getPieceType(piece);
     const moves = [];
@@ -172,7 +171,9 @@ class ChessBoard {
           }
         }
 
-        // En passant — the target square must match the stored en passant target
+        // En passant — capture to the en passant target square (the square
+        // the opponent's pawn passed through during its double push).
+        // The target must be exactly one diagonal step forward from this pawn.
         if (this.enPassantTarget &&
             this.enPassantTarget.row === newRow &&
             this.enPassantTarget.col === newCol) {
@@ -180,7 +181,7 @@ class ChessBoard {
             from: { row, col },
             to: { row: newRow, col: newCol },
             isEnPassant: true,
-            capture: this.getPiece(row, newCol)  // The captured pawn sits on the original row
+            capture: this.getPiece(row, newCol)
           });
         }
       }
@@ -311,10 +312,10 @@ class ChessBoard {
     const backRank = color === WHITE ? 7 : 0;
 
     // King must be on its starting square
-    if (row !== backRank || col !== 4) return moves;
+    if (row !== backRank || col !== 4) {return moves;}
 
     // Can't castle out of check
-    if (this.isSquareAttacked(row, col, color === WHITE ? BLACK : WHITE)) return moves;
+    if (this.isSquareAttacked(row, col, color === WHITE ? BLACK : WHITE)) {return moves;}
 
     // King-side: squares f and g must be empty and safe
     if (rights.kingSide) {
@@ -354,20 +355,21 @@ class ChessBoard {
       const pawnRow = row - pawnDirection;
       if (this.isValidSquare(pawnRow, attackCol)) {
         const piece = this.getPiece(pawnRow, attackCol);
-        if (piece === (byColor === WHITE ? 'P' : 'p')) return true;
+        if (piece === (byColor === WHITE ? 'P' : 'p')) {return true;}
       }
     }
 
     // Knight attacks
     for (const [dr, dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) {
       const nr = row + dr, nc = col + dc;
-      if (this.isValidSquare(nr, nc) && this.getPiece(nr, nc) === (byColor === WHITE ? 'N' : 'n')) return true;
+      if (this.isValidSquare(nr, nc) && this.getPiece(nr, nc) === (byColor === WHITE ? 'N' : 'n')) {return true;}
     }
 
-    // King attacks (one square in any direction)
+    // King attacks (one square in any direction) — this also prevents kings
+    // from moving to squares adjacent to the enemy king
     for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]) {
       const nr = row + dr, nc = col + dc;
-      if (this.isValidSquare(nr, nc) && this.getPiece(nr, nc) === (byColor === WHITE ? 'K' : 'k')) return true;
+      if (this.isValidSquare(nr, nc) && this.getPiece(nr, nc) === (byColor === WHITE ? 'K' : 'k')) {return true;}
     }
 
     // Sliding pieces — straight lines (rook/queen)
@@ -378,7 +380,7 @@ class ChessBoard {
         if (piece) {
           if (this.getPieceColor(piece) === byColor) {
             const t = this.getPieceType(piece);
-            if (t === ROOK || t === QUEEN) return true;
+            if (t === ROOK || t === QUEEN) {return true;}
           }
           break;  // Blocked
         }
@@ -394,7 +396,7 @@ class ChessBoard {
         if (piece) {
           if (this.getPieceColor(piece) === byColor) {
             const t = this.getPieceType(piece);
-            if (t === BISHOP || t === QUEEN) return true;
+            if (t === BISHOP || t === QUEEN) {return true;}
           }
           break;  // Blocked
         }
@@ -409,7 +411,7 @@ class ChessBoard {
     const kingChar = color === WHITE ? 'K' : 'k';
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
-        if (this.getPiece(row, col) === kingChar) return { row, col };
+        if (this.getPiece(row, col) === kingChar) {return { row, col };}
       }
     }
     return null;
@@ -417,13 +419,13 @@ class ChessBoard {
 
   isInCheck() {
     const kingPos = this.findKing(this.currentTurn);
-    if (!kingPos) return false;
+    if (!kingPos) {return false;}
     return this.isSquareAttacked(kingPos.row, kingPos.col, this.currentTurn === WHITE ? BLACK : WHITE);
   }
 
   isColorInCheck(color) {
     const kingPos = this.findKing(color);
-    if (!kingPos) return false;
+    if (!kingPos) {return false;}
     return this.isSquareAttacked(kingPos.row, kingPos.col, color === WHITE ? BLACK : WHITE);
   }
 
@@ -448,11 +450,13 @@ class ChessBoard {
     this.setPiece(to.row, to.col, piece);
     this.setPiece(from.row, from.col, null);
 
-    // En passant: remove the captured pawn from its actual square
+    // En passant: remove the captured pawn from its actual square.
+    // The captured pawn sits on the same rank as the capturing pawn's origin,
+    // but on the destination file.
     if (move.isEnPassant) {
       const capturedPawn = this.getPiece(from.row, to.col);
       this.setPiece(from.row, to.col, null);
-      if (capturedPawn) this.capturedPieces[this.currentTurn].push(capturedPawn);
+      if (capturedPawn) {this.capturedPieces[this.currentTurn].push(capturedPawn);}
     }
 
     // Castling: shuffle the rook to its new file
@@ -502,16 +506,16 @@ class ChessBoard {
     if (pieceType === ROOK) {
       const backRank = this.currentTurn === WHITE ? 7 : 0;
       if (from.row === backRank) {
-        if (from.col === 0) this.castlingRights[this.currentTurn].queenSide = false;
-        if (from.col === 7) this.castlingRights[this.currentTurn].kingSide = false;
+        if (from.col === 0) {this.castlingRights[this.currentTurn].queenSide = false;}
+        if (from.col === 7) {this.castlingRights[this.currentTurn].kingSide = false;}
       }
     }
 
     // If a rook was captured, the opponent loses that side's rights
     if (to.row === 0 || to.row === 7) {
       const opponentColor = this.currentTurn === WHITE ? BLACK : WHITE;
-      if (to.col === 0) this.castlingRights[opponentColor].queenSide = false;
-      if (to.col === 7) this.castlingRights[opponentColor].kingSide = false;
+      if (to.col === 0) {this.castlingRights[opponentColor].queenSide = false;}
+      if (to.col === 7) {this.castlingRights[opponentColor].kingSide = false;}
     }
   }
 
@@ -527,6 +531,10 @@ class ChessBoard {
    * We simulate the move, check for check, then roll back.
    */
   isMoveLegal(move) {
+    // King can never capture the enemy king — makeMove would overwrite it
+    const targetPiece = this.getPiece(move.to.row, move.to.col);
+    if (targetPiece && this.getPieceType(targetPiece) === KING) {return false;}
+
     const state = this.makeMove(move);
     const inCheck = this.isInCheck();
     this.undoMove(state);
@@ -540,7 +548,7 @@ class ChessBoard {
         const piece = this.getPiece(row, col);
         if (piece && this.isOwnPiece(piece)) {
           for (const move of this.generatePseudoLegalMoves(row, col)) {
-            if (this.isMoveLegal(move)) legalMoves.push(move);
+            if (this.isMoveLegal(move)) {legalMoves.push(move);}
           }
         }
       }
@@ -577,21 +585,21 @@ class ChessBoard {
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
         const piece = this.getPiece(row, col);
-        if (piece) pieces[this.getPieceColor(piece)].push(this.getPieceType(piece));
+        if (piece) {pieces[this.getPieceColor(piece)].push(this.getPieceType(piece));}
       }
     }
 
     // King vs King
-    if (pieces[WHITE].length === 1 && pieces[BLACK].length === 1) return true;
+    if (pieces[WHITE].length === 1 && pieces[BLACK].length === 1) {return true;}
 
     // King + minor piece vs King
     if (pieces[WHITE].length === 1 && pieces[BLACK].length === 2) {
       const minor = pieces[BLACK].filter(p => p !== KING);
-      if (minor.length === 1 && (minor[0] === BISHOP || minor[0] === KNIGHT)) return true;
+      if (minor.length === 1 && (minor[0] === BISHOP || minor[0] === KNIGHT)) {return true;}
     }
     if (pieces[BLACK].length === 1 && pieces[WHITE].length === 2) {
       const minor = pieces[WHITE].filter(p => p !== KING);
-      if (minor.length === 1 && (minor[0] === BISHOP || minor[0] === KNIGHT)) return true;
+      if (minor.length === 1 && (minor[0] === BISHOP || minor[0] === KNIGHT)) {return true;}
     }
 
     return false;
@@ -602,9 +610,9 @@ class ChessBoard {
   }
 
   getGameOverReason() {
-    if (this.isCheckmate()) return `Checkmate! ${this.currentTurn === WHITE ? 'Black' : 'White'} wins!`;
-    if (this.isStalemate()) return 'Stalemate! The game is a draw.';
-    if (this.isInsufficientMaterial()) return 'Draw! Insufficient material to checkmate.';
+    if (this.isCheckmate()) {return `Checkmate! ${this.currentTurn === WHITE ? 'Black' : 'White'} wins!`;}
+    if (this.isStalemate()) {return 'Stalemate! The game is a draw.';}
+    if (this.isInsufficientMaterial()) {return 'Draw! Insufficient material to checkmate.';}
     return null;
   }
 
@@ -635,7 +643,7 @@ class ChessBoard {
     this.moveHistory.push({ move, notation, color: this.currentTurn });
 
     // Advance the full-move counter after Black moves
-    if (this.currentTurn === BLACK) this.moveNumber++;
+    if (this.currentTurn === BLACK) {this.moveNumber++;}
     this.currentTurn = this.currentTurn === WHITE ? BLACK : WHITE;
 
     // Reset the 50-move clock on pawn moves or captures
@@ -654,17 +662,17 @@ class ChessBoard {
     const files = 'abcdefgh';
     const ranks = '87654321';
 
-    if (move.isCastling === 'kingside') return 'O-O';
-    if (move.isCastling === 'queenside') return 'O-O-O';
+    if (move.isCastling === 'kingside') {return 'O-O';}
+    if (move.isCastling === 'queenside') {return 'O-O-O';}
 
     let notation = '';
 
     // Piece letter (pawns are implicit)
-    if (pieceType !== PAWN) notation += pieceType.toUpperCase();
+    if (pieceType !== PAWN) {notation += pieceType.toUpperCase();}
 
     // Capture
     if (move.capture || move.isEnPassant) {
-      if (pieceType === PAWN) notation += files[move.from.col];
+      if (pieceType === PAWN) {notation += files[move.from.col];}
       notation += 'x';
     }
 
@@ -672,7 +680,7 @@ class ChessBoard {
     notation += files[move.to.col] + ranks[move.to.row];
 
     // Promotion
-    if (move.promotion) notation += '=' + move.promotion.toUpperCase();
+    if (move.promotion) {notation += '=' + move.promotion.toUpperCase();}
 
     return notation;
   }
@@ -682,7 +690,7 @@ class ChessBoard {
    * castling rights, and turn order. Used by the "Undo" button.
    */
   undoLastMove() {
-    if (this.moveHistory.length === 0) return null;
+    if (this.moveHistory.length === 0) {return null;}
 
     const lastMoveRecord = this.moveHistory.pop();
     const lastMove = lastMoveRecord.move;
@@ -691,16 +699,17 @@ class ChessBoard {
 
     // Restore the original piece (a promoted pawn becomes a pawn again)
     let originalPiece = pieceAtDest;
-    if (lastMove.promotion) originalPiece = movingColor === WHITE ? 'P' : 'p';
+    if (lastMove.promotion) {originalPiece = movingColor === WHITE ? 'P' : 'p';}
 
     this.setPiece(lastMove.from.row, lastMove.from.col, originalPiece);
     this.setPiece(lastMove.to.row, lastMove.to.col, null);
 
-    // En passant: put the captured pawn back
+    // En passant: put the captured pawn back on its original square
+    // (same rank as the capturing pawn's origin, same file as the destination).
     if (lastMove.isEnPassant) {
       this.setPiece(lastMove.from.row, lastMove.to.col, movingColor === WHITE ? 'p' : 'P');
       const idx = this.capturedPieces[movingColor].lastIndexOf(movingColor === WHITE ? 'p' : 'P');
-      if (idx >= 0) this.capturedPieces[movingColor].splice(idx, 1);
+      if (idx >= 0) {this.capturedPieces[movingColor].splice(idx, 1);}
     }
 
     // Castling: move the rook back to its corner
@@ -719,7 +728,7 @@ class ChessBoard {
     if (lastMove.capture && !lastMove.isEnPassant) {
       this.setPiece(lastMove.to.row, lastMove.to.col, lastMove.capture);
       const idx = this.capturedPieces[movingColor].lastIndexOf(lastMove.capture);
-      if (idx >= 0) this.capturedPieces[movingColor].splice(idx, 1);
+      if (idx >= 0) {this.capturedPieces[movingColor].splice(idx, 1);}
     }
 
     // Recalculate castling rights from piece positions (simplified)
@@ -728,7 +737,7 @@ class ChessBoard {
 
     // Switch the turn back
     this.currentTurn = movingColor;
-    if (movingColor === BLACK) this.moveNumber = Math.max(1, this.moveNumber - 1);
+    if (movingColor === BLACK) {this.moveNumber = Math.max(1, this.moveNumber - 1);}
     this.enPassantTarget = null;
 
     return lastMoveRecord;
@@ -753,8 +762,8 @@ class ChessBoard {
           emptyCount++;
         }
       }
-      if (emptyCount > 0) fen += emptyCount;
-      if (row < 7) fen += '/';
+      if (emptyCount > 0) {fen += emptyCount;}
+      if (row < 7) {fen += '/';}
     }
 
     // Active color
@@ -762,10 +771,10 @@ class ChessBoard {
 
     // Castling availability
     let castling = '';
-    if (this.castlingRights[WHITE].kingSide) castling += 'K';
-    if (this.castlingRights[WHITE].queenSide) castling += 'Q';
-    if (this.castlingRights[BLACK].kingSide) castling += 'k';
-    if (this.castlingRights[BLACK].queenSide) castling += 'q';
+    if (this.castlingRights[WHITE].kingSide) {castling += 'K';}
+    if (this.castlingRights[WHITE].queenSide) {castling += 'Q';}
+    if (this.castlingRights[BLACK].kingSide) {castling += 'k';}
+    if (this.castlingRights[BLACK].queenSide) {castling += 'q';}
     fen += ' ' + (castling || '-');
 
     // En passant target square
@@ -781,6 +790,142 @@ class ChessBoard {
     fen += ' ' + this.halfmoveClock + ' ' + this.moveNumber;
 
     return fen;
+  }
+
+  /**
+   * Serialize the live game state so the app can restore unfinished games
+   * and save review data without depending on a backend.
+   */
+  serializeState() {
+    return {
+      board: this.board.map(row => [...row]),
+      currentTurn: this.currentTurn,
+      moveHistory: this.moveHistory.map(entry => ({
+        move: JSON.parse(JSON.stringify(entry.move)),
+        notation: entry.notation,
+        color: entry.color
+      })),
+      capturedPieces: {
+        [WHITE]: [...this.capturedPieces[WHITE]],
+        [BLACK]: [...this.capturedPieces[BLACK]]
+      },
+      castlingRights: JSON.parse(JSON.stringify(this.castlingRights)),
+      enPassantTarget: this.enPassantTarget ? { ...this.enPassantTarget } : null,
+      halfmoveClock: this.halfmoveClock,
+      moveNumber: this.moveNumber,
+      fen: this.getFEN()
+    };
+  }
+
+  /**
+   * Restore a serialized game state. Falls back to a fresh game if the
+   * snapshot is missing critical fields.
+   */
+  loadState(state) {
+    if (!state || !Array.isArray(state.board) || !state.currentTurn) {
+      this.reset();
+      return;
+    }
+
+    this.board = state.board.map(row => [...row]);
+    this.currentTurn = state.currentTurn;
+    this.moveHistory = Array.isArray(state.moveHistory)
+      ? state.moveHistory.map(entry => ({
+          move: JSON.parse(JSON.stringify(entry.move)),
+          notation: entry.notation,
+          color: entry.color
+        }))
+      : [];
+    this.capturedPieces = {
+      [WHITE]: Array.isArray(state.capturedPieces?.[WHITE]) ? [...state.capturedPieces[WHITE]] : [],
+      [BLACK]: Array.isArray(state.capturedPieces?.[BLACK]) ? [...state.capturedPieces[BLACK]] : []
+    };
+    this.castlingRights = state.castlingRights
+      ? JSON.parse(JSON.stringify(state.castlingRights))
+      : {
+          [WHITE]: { kingSide: true, queenSide: true },
+          [BLACK]: { kingSide: true, queenSide: true }
+        };
+    this.enPassantTarget = state.enPassantTarget ? { ...state.enPassantTarget } : null;
+    this.halfmoveClock = Number.isInteger(state.halfmoveClock) ? state.halfmoveClock : 0;
+    this.moveNumber = Number.isInteger(state.moveNumber) ? state.moveNumber : 1;
+  }
+
+  /**
+   * Load a position from FEN so puzzle and study modes can jump directly
+   * into a curated position without replaying the whole game.
+   */
+  loadFEN(fen) {
+    if (!fen || typeof fen !== 'string') {
+      this.reset();
+      return;
+    }
+
+    const [placement, activeColor, castling, enPassant, halfmove, fullmove] = fen.trim().split(/\s+/);
+    if (!placement || !activeColor) {
+      this.reset();
+      return;
+    }
+
+    const rows = placement.split('/');
+    if (rows.length !== 8) {
+      this.reset();
+      return;
+    }
+
+    this.board = rows.map(row => {
+      const squares = [];
+      for (const char of row) {
+        if (/\d/.test(char)) {
+          const emptySquares = parseInt(char, 10);
+          for (let i = 0; i < emptySquares; i++) {squares.push(null);}
+        } else {
+          squares.push(char);
+        }
+      }
+      return squares;
+    });
+
+    this.currentTurn = activeColor === 'b' ? BLACK : WHITE;
+    this.moveHistory = [];
+    this.capturedPieces = { [WHITE]: [], [BLACK]: [] };
+    this.castlingRights = {
+      [WHITE]: {
+        kingSide: castling?.includes('K') || false,
+        queenSide: castling?.includes('Q') || false
+      },
+      [BLACK]: {
+        kingSide: castling?.includes('k') || false,
+        queenSide: castling?.includes('q') || false
+      }
+    };
+    this.enPassantTarget = enPassant && enPassant !== '-'
+      ? {
+          row: '87654321'.indexOf(enPassant[1]),
+          col: 'abcdefgh'.indexOf(enPassant[0])
+        }
+      : null;
+    this.halfmoveClock = Number.isInteger(parseInt(halfmove, 10)) ? parseInt(halfmove, 10) : 0;
+    this.moveNumber = Number.isInteger(parseInt(fullmove, 10)) ? parseInt(fullmove, 10) : 1;
+  }
+
+  /**
+   * Find a legal move using compact UCI notation like "e2e4" or "a7a8=q".
+   */
+  findMoveByUci(uci) {
+    if (!uci) {return null;}
+    const normalized = uci.toLowerCase();
+    const legalMoves = this.generateAllLegalMoves();
+
+    return legalMoves.find(move => this.moveToUci(move) === normalized) || null;
+  }
+
+  moveToUci(move) {
+    const files = 'abcdefgh';
+    const ranks = '87654321';
+    let notation = `${files[move.from.col]}${ranks[move.from.row]}${files[move.to.col]}${ranks[move.to.row]}`;
+    if (move.promotion) {notation += `=${move.promotion.toLowerCase()}`;}
+    return notation;
   }
 }
 

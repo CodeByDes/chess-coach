@@ -161,7 +161,7 @@ class ChessEngine {
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
         const piece = board.getPiece(row, col);
-        if (!piece) continue;
+        if (!piece) {continue;}
 
         const pieceType = board.getPieceType(piece);
         const color = board.getPieceColor(piece);
@@ -169,7 +169,7 @@ class ChessEngine {
         // Look up the positional bonus from the right table
         const tables = { p: PAWN_TABLE, n: KNIGHT_TABLE, b: BISHOP_TABLE, r: ROOK_TABLE, q: QUEEN_TABLE, k: KING_TABLE_MIDDLE };
         const table = tables[pieceType];
-        if (!table) continue;
+        if (!table) {continue;}
 
         // Black's perspective is the mirror image — flip the row
         const lookupRow = color === BLACK ? 7 - row : row;
@@ -205,7 +205,7 @@ class ChessEngine {
 
     for (const color of [WHITE, BLACK]) {
       const kingPos = board.findKing(color);
-      if (!kingPos) continue;
+      if (!kingPos) {continue;}
 
       const { row: kingRow, col: kingCol } = kingPos;
       let safety = 0;
@@ -215,7 +215,7 @@ class ChessEngine {
       // Pawns directly in front of the king
       for (let dc = -1; dc <= 1; dc++) {
         const r = kingRow + direction, c = kingCol + dc;
-        if (board.isValidSquare(r, c) && board.getPiece(r, c) === pawnChar) safety += 20;
+        if (board.isValidSquare(r, c) && board.getPiece(r, c) === pawnChar) {safety += 20;}
       }
 
       // Penalty if there's no pawn on the king's file at all
@@ -226,7 +226,7 @@ class ChessEngine {
           break;
         }
       }
-      if (!hasPawnOnFile) safety -= 15;
+      if (!hasPawnOnFile) {safety -= 15;}
 
       safetyScore += color === WHITE ? safety : -safety;
     }
@@ -250,11 +250,11 @@ class ChessEngine {
     let centerScore = 0;
     for (const sq of centerSquares) {
       const piece = board.getPiece(sq.r, sq.c);
-      if (piece) centerScore += board.getPieceColor(piece) === WHITE ? 10 : -10;
+      if (piece) {centerScore += board.getPieceColor(piece) === WHITE ? 10 : -10;}
     }
     for (const sq of extendedCenter) {
       const piece = board.getPiece(sq.r, sq.c);
-      if (piece) centerScore += board.getPieceColor(piece) === WHITE ? 3 : -3;
+      if (piece) {centerScore += board.getPieceColor(piece) === WHITE ? 3 : -3;}
     }
     return centerScore;
   }
@@ -303,10 +303,10 @@ class ChessEngine {
    * At depth 0 or game over, we fall back to the static evaluator.
    */
   minimax(board, depth, alpha, beta, isMaximizing) {
-    if (depth === 0 || board.isGameOver()) return this.evaluate(board);
+    if (depth === 0 || board.isGameOver()) {return this.evaluate(board);}
 
     const legalMoves = board.generateAllLegalMoves();
-    if (legalMoves.length === 0) return this.evaluate(board);
+    if (legalMoves.length === 0) {return this.evaluate(board);}
 
     if (isMaximizing) {
       let maxScore = -Infinity;
@@ -316,7 +316,7 @@ class ChessEngine {
         board.undoMove(state);
         maxScore = Math.max(maxScore, score);
         alpha = Math.max(alpha, score);
-        if (beta <= alpha) break;  // Prune — opponent won't allow this line
+        if (beta <= alpha) {break;}  // Prune — opponent won't allow this line
       }
       return maxScore;
     } else {
@@ -327,7 +327,7 @@ class ChessEngine {
         board.undoMove(state);
         minScore = Math.min(minScore, score);
         beta = Math.min(beta, score);
-        if (beta <= alpha) break;  // Prune — we won't choose this line
+        if (beta <= alpha) {break;}  // Prune — we won't choose this line
       }
       return minScore;
     }
@@ -354,10 +354,10 @@ class ChessEngine {
         scoreB += 10 * vicVal - atkVal;
       }
 
-      if (a.promotion) scoreA += PIECE_VALUES[a.promotion];
-      if (b.promotion) scoreB += PIECE_VALUES[b.promotion];
-      if (a.isCastling) scoreA += 50;
-      if (b.isCastling) scoreB += 50;
+      if (a.promotion) {scoreA += PIECE_VALUES[a.promotion];}
+      if (b.promotion) {scoreB += PIECE_VALUES[b.promotion];}
+      if (a.isCastling) {scoreA += 50;}
+      if (b.isCastling) {scoreB += 50;}
 
       return scoreB - scoreA;  // Descending — best first
     });
@@ -366,8 +366,49 @@ class ChessEngine {
   moveToString(move) {
     const files = 'abcdefgh', ranks = '87654321';
     let str = files[move.from.col] + ranks[move.from.row] + files[move.to.col] + ranks[move.to.row];
-    if (move.promotion) str += '=' + move.promotion;
+    if (move.promotion) {str += '=' + move.promotion;}
     return str;
+  }
+
+  movesEqual(a, b) {
+    if (!a || !b) {return false;}
+    return a.from.row === b.from.row &&
+      a.from.col === b.from.col &&
+      a.to.row === b.to.row &&
+      a.to.col === b.to.col &&
+      (a.promotion || null) === (b.promotion || null) &&
+      (!!a.isCastling ? a.isCastling : null) === (!!b.isCastling ? b.isCastling : null);
+  }
+
+  evaluateMove(board, move) {
+    const state = board.makeMove(move);
+    const absoluteScore = this.evaluate(board);
+    board.undoMove(state);
+
+    const mover = board.currentTurn;
+    return {
+      move,
+      score: mover === WHITE ? absoluteScore : -absoluteScore
+    };
+  }
+
+  getTopMoves(board, depth = 2, limit = 3) {
+    const legalMoves = board.generateAllLegalMoves();
+    if (legalMoves.length === 0) {return [];}
+
+    const mover = board.currentTurn;
+    const scoredMoves = legalMoves.map(move => {
+      if (depth >= 3) {
+        const state = board.makeMove(move);
+        const score = this.minimax(board, depth - 1, -Infinity, Infinity, mover !== WHITE);
+        board.undoMove(state);
+        return { move, score: mover === WHITE ? score : -score };
+      }
+      return this.evaluateMove(board, move);
+    });
+
+    scoredMoves.sort((a, b) => b.score - a.score);
+    return scoredMoves.slice(0, limit);
   }
 
   // ============================================
@@ -382,13 +423,17 @@ class ChessEngine {
   analyzeMove(board, move) {
     this.log(`Analyzing move: ${this.moveToString(move)}`);
 
-    const bestMove = this.findBestMove(board, 2);
-    const scoreBefore = this.evaluate(board);
+    const scoredCandidates = this.getTopMoves(board, 2, 3);
+    const bestMove = scoredCandidates[0]?.move || this.findBestMove(board, 2);
+    const scoreBeforeAbsolute = this.evaluate(board);
+    const mover = board.currentTurn;
+    const scoreBefore = mover === WHITE ? scoreBeforeAbsolute : -scoreBeforeAbsolute;
 
     // Simulate the move and evaluate from the opponent's perspective
     const state = board.makeMove(move);
-    const scoreAfter = -this.evaluate(board);  // Negate because the turn flips
+    const scoreAfterAbsolute = this.evaluate(board);
     board.undoMove(state);
+    const scoreAfter = mover === WHITE ? scoreAfterAbsolute : -scoreAfterAbsolute;
 
     const scoreDiff = scoreAfter - scoreBefore;
     this.log(`Before: ${scoreBefore}, After: ${scoreAfter}, Diff: ${scoreDiff}`);
@@ -398,10 +443,19 @@ class ChessEngine {
     if (scoreDiff < -200)      { quality = 'blunder';    feedback = this.getBlunderFeedback(move, board); }
     else if (scoreDiff < -50)  { quality = 'mistake';    feedback = this.getMistakeFeedback(move, board); }
     else if (scoreDiff < 0)    { quality = 'inaccuracy'; feedback = this.getInaccuracyFeedback(move, board); }
-    else if (move === bestMove || Math.abs(scoreDiff) < 20) { quality = 'best'; feedback = this.getBestMoveFeedback(move, board); }
+    else if (this.movesEqual(move, bestMove) || Math.abs(scoreDiff) < 20) { quality = 'best'; feedback = this.getBestMoveFeedback(move, board); }
     else                       { quality = 'good';       feedback = this.getGoodMoveFeedback(move, board); }
 
-    return { move, bestMove, scoreBefore, scoreAfter, scoreDiff, quality, feedback };
+    return {
+      move,
+      bestMove,
+      scoreBefore,
+      scoreAfter,
+      scoreDiff,
+      quality,
+      feedback,
+      candidates: scoredCandidates
+    };
   }
 
   // Kid-friendly feedback messages for each move quality
@@ -448,8 +502,8 @@ class ChessEngine {
   }
 
   getBestMoveFeedback(move) {
-    if (move.capture) return [`Nice capture! 🎯`, `Great capture! Well done! ⭐`, `Excellent! You got their piece! 🏆`][Math.floor(Math.random() * 3)];
-    if (move.isCastling) return `Great! You castled! Your king is safe now! 🏰`;
+    if (move.capture) {return [`Nice capture! 🎯`, `Great capture! Well done! ⭐`, `Excellent! You got their piece! 🏆`][Math.floor(Math.random() * 3)];}
+    if (move.isCastling) {return `Great! You castled! Your king is safe now! 🏰`;}
     return [`Great move! 🌟`, `Excellent! That's the best move! 🎉`, `Perfect! You're thinking like a champion! ♔`, `Wow! That's a really strong move! 💪`, `Amazing! Keep up the great work! ⭐`, `Fantastic move! You're getting better! 🏆`][Math.floor(Math.random() * 6)];
   }
 
@@ -466,7 +520,7 @@ class ChessEngine {
    */
   getMoveHint(board) {
     const bestMove = this.findBestMove(board, 2);
-    if (!bestMove) return "Hmm, I'm not sure what to suggest. Look for safe moves!";
+    if (!bestMove) {return "Hmm, I'm not sure what to suggest. Look for safe moves!";}
 
     const pieceName = this.getPieceName(board.getPieceType(board.getPiece(bestMove.from.row, bestMove.from.col)));
     const files = 'abcdefgh', ranks = '87654321';
