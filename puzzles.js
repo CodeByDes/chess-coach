@@ -61,6 +61,10 @@ class ChessPuzzleSystem {
     try {
       const response = await fetch('assets/puzzles/puzzles.json');
       if (!response.ok) {throw new Error('Unable to load puzzle database.');}
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (contentType && !contentType.includes('application/json') && !contentType.includes('text/plain')) {
+        throw new Error('Puzzle database returned wrong content type.');
+      }
       const data = await response.json();
       this.puzzles = Array.isArray(data) ? data : [];
     } catch { /* istanbul ignore next */

@@ -64,10 +64,14 @@ class ChessApp {
     this.loadSavedReviews();
     try {
       await this.puzzleSystem.init();
+      if (this.puzzleSystem.puzzles.length === 0) {
+        console.warn('Puzzle system initialized with empty database.');
+      }
     } catch (error) {
-      // Puzzles are unavailable on file:// (fetch blocked by browser security).
-      // The game still works fully — only puzzle modes are disabled.
-      console.warn('Puzzle system unavailable. Use a local server to enable puzzle modes.', error);
+      // Puzzles are unavailable — the game still works fully without them.
+      // This can happen on some hosting providers where fetch() returns HTML
+      // for non-existent paths (SPA routing) or when puzzles-data.js fails to load.
+      console.warn('Puzzle system unavailable. Game play and coach features still work.', error);
     }
 
     this.ui.onSquareClick = (row, col) => this.handleSquareClick(row, col);
@@ -205,7 +209,6 @@ class ChessApp {
   }
 
   handleSquareClick(row, col) {
-<<<<<<< HEAD
     if (this.isPuzzleMode()) {
       this.handlePuzzleSquareClick(row, col);
       return;
@@ -219,16 +222,6 @@ class ChessApp {
       return;
     }
     if (this.board.currentTurn === this.aiColor || this.ai.getIsThinking()) {return;}
-=======
-    if (!this.gameActive) {
-      const clickedPiece = this.board.getPiece(row, col);
-      if (clickedPiece) {
-        this.ui.showMessage('No game is active yet. Click "New Game" to start playing.', 'warning', true);
-      }
-      return;
-    }
-    if (this.board.currentTurn === this.aiColor || this.ai.getIsThinking()) return;
->>>>>>> 7aaa216d0d6291fc3638f54184ef047ae273ebea
 
     const clickedPiece = this.board.getPiece(row, col);
     const isOwnPiece = clickedPiece && this.board.isOwnPiece(clickedPiece);

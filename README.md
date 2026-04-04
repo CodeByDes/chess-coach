@@ -39,15 +39,11 @@ A friendly, browser-based chess coach that helps you learn and improve at chess.
 
 | Desktop | Mobile |
 |------------|-------------|
-<<<<<<< HEAD
 | [<img src="https://i.imgur.com/cMFSjk8.png" width="500">](https://i.imgur.com/sxZMQJk.png) | [<img src="https://i.imgur.com/7t6xKqK.jpeg" height="400" >](https://i.imgur.com/cMFSjk8.png) |
 
 | Coach Review | Puzzle Hub |
 |------------|-------------|
 | [<img src="https://i.imgur.com/9ucVUHN.png" width="500">](https://i.imgur.com/9ucVUHN.png) | [<img src="https://i.imgur.com/JoVMrJ2.png" width="500" >](https://i.imgur.com/JoVMrJ2.png) |
-=======
-| [<img src="https://i.imgur.com/sxZMQJk.png" width="500">](https://i.imgur.com/sxZMQJk.png) | [<img src="https://i.imgur.com/7t6xKqK.jpeg" height="400" >](https://i.imgur.com/7t6xKqK.jpeg) |
->>>>>>> 7aaa216d0d6291fc3638f54184ef047ae273ebea
 
 
 
